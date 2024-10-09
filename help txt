@@ -1,0 +1,2 @@
+String[] commonBigrams = {"TH", "HE", "IN", "ER", "AN", "RE", "ND", "AT", "ON", "NT", "AS", "IF" , "BE"};
+        String[] commonTrigrams = {"THE", "AND", "ING", "ENT", "ION", "HER", "FOR", "THA", "NTH", "INT"};
