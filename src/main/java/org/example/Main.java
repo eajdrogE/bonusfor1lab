@@ -1,8 +1,6 @@
 import java.util.*;
 
 public class Main {
-
-    // Частотный анализ для английского языка
     private static final String ENGLISH_FREQUENCY_ORDER = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
 
     public static void main(String[] args) {
@@ -108,7 +106,6 @@ public class Main {
     }
 
     private static double scoreDecryption(String text) {
-        // Пример метода оценки расшифровки на основе частот биграмм и триграмм
         String[] commonBigrams = {"TH", "HE", "IN",  "AN", "RE", "ND", "AT", "ON", "NT", "HA", "EN", "ES", "ST", "OR", "TE", "OF", "ED", "IS", "IT"};
         String[] commonTrigrams = {"THE", "AND", "ING", "ENT","HER", "FOR", "THA", "NTH", "INT", "TER", "EST", "RES", "HIS", "ERE", "HES", "ALL", "BUT"};
         String[] commonlotrams ={"BEFORE","CHAR", "DEEPLY", "GIRL", "FROM"};
