@@ -1,12 +1,47 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Main {
     private static final String ENGLISH_FREQUENCY_ORDER = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
-
+    private static final double[] ENGLISH_LETTER_FREQUENCIES = {
+            12.702, // E
+            9.056,  // T
+            8.167,  // A
+            7.507,  // O
+            6.966,  // I
+            6.749,  // N
+            6.327,  // S
+            6.094,  // H
+            5.987,  // R
+            4.253,  // D
+            4.025,  // L
+            2.782,  // C
+            2.406,  // M
+            2.360,  // W
+            2.228,  // F
+            2.015,  // G
+            1.974,  // Y
+            1.929,  // P
+            1.492,  // B
+            0.978,  // V
+            0.772,  // K
+            0.153,  // J
+            0.150,  // X
+            0.095,  // Q
+            0.074   // Z
+    };
     public static void main(String[] args) {
-        String cipherText = "EM RMBYWKIYBIO BIIMESI SRYC JRBH EM VMAWMKIMBRWMEC PVFIYFWJIY BEQCWY SWIP WVB RM AWPBVUI BW NRMO IPAEFI NYWU E OIIFCQ VMHEFFQ EMO NYVPBYEBIO ARKRCREM CRNI. HIY NRYPB EBBIUFB EB BELRMS OWJM E PVFIYKRCCERM PIIP HIY URPBELIM NWY WMI BHYVPBRMS HIY RMBW BHI UROPB WN BHI CWAEC AEFI PAIMI’P FWCRBRAP VMJYRBBIM YVCIP EMO EUTRSVWVP UWYECP. EP PHI YRPLP CRNI EMO CRUT BEQCWY NEAIP BHI ORCIUUE WN HEKRMS BW OW BHI JYWMS BHRMSP NWY BHI YRSHB YIEPWMP.";
-        String decryptedText = simulatedAnnealingDecrypt(cipherText.toUpperCase());
-        System.out.println("Расшифрованный текст: " + decryptedText);
+        try {
+            String cipherText = new String(Files.readAllBytes(Paths.get("in.txt")));
+            String decryptedText = simulatedAnnealingDecrypt(cipherText.toUpperCase());
+            System.out.println("Расшифрованный текст: " + decryptedText);
+        }
+     catch (IOException e) {
+        System.out.println("Ошибка при чтении файла: " + e.getMessage());
+    }
+
     }
 
     public static String simulatedAnnealingDecrypt(String cipherText) {
@@ -14,12 +49,8 @@ public class Main {
         String bestDecryption = decryptWithKey(cipherText, bestKey);
         double bestScore = scoreDecryption(bestDecryption);
 
-        double initialScore = scoreDecryption(cipherText);
-        System.out.println("Начальный текст: " + cipherText);
-        System.out.println("Начальная оценка: " + initialScore);
-
-        double temperature = 1000.0;
-        double coolingRate = 0.00001;
+        double temperature = 1300.0;
+        double coolingRate = 0.00002;
 
         while (temperature > 1) {
             String newKey = mutateKey(bestKey);
@@ -66,9 +97,9 @@ public class Main {
         int mutationType = random.nextInt(2); // Два типа мутаций
 
         switch (mutationType) {
-            case 0: // Обмен двух символов
-                int index1 = random.nextInt(key.length());
-                int index2 = random.nextInt(key.length());
+            case 0: // Взвешенный обмен двух символов
+                int index1 = weightedRandomIndex();
+                int index2 = weightedRandomIndex();
                 char[] keyChars = key.toCharArray();
                 char temp = keyChars[index1];
                 keyChars[index1] = keyChars[index2];
@@ -85,6 +116,20 @@ public class Main {
             default:
                 return key;
         }
+    }
+
+    private static int weightedRandomIndex() {
+        double totalWeight = Arrays.stream(ENGLISH_LETTER_FREQUENCIES).sum();
+        double random = Math.random() * totalWeight;
+        double cumulativeWeight = 0.0;
+
+        for (int i = 0; i < ENGLISH_LETTER_FREQUENCIES.length; i++) {
+            cumulativeWeight += ENGLISH_LETTER_FREQUENCIES[i];
+            if (random <= cumulativeWeight) {
+                return i;
+            }
+        }
+        return ENGLISH_LETTER_FREQUENCIES.length - 1; // На случай, если случайное число на границе
     }
 
     private static String decryptWithKey(String cipherText, String key) {
@@ -106,22 +151,22 @@ public class Main {
     }
 
     private static double scoreDecryption(String text) {
-        String[] commonBigrams = {"TH", "HE", "IN",  "AN", "RE", "ND", "AT", "ON", "NT", "HA", "EN", "ES", "ST", "OR", "TE", "OF", "ED", "IS", "IT"};
-        String[] commonTrigrams = {"THE", "AND", "ING", "ENT","HER", "FOR", "THA", "NTH", "INT", "TER", "EST", "RES", "HIS", "ERE", "HES", "ALL", "BUT"};
-        String[] commonlotrams ={"BEFORE","CHAR", "DEEPLY", "GIRL", "FROM"};
-        String[] uncommonBiggrams ={"QZ","XJ", "ZQ", "JQ", "VX"};
+        String[] commonBigrams = {"TH", "HE", "IN",  "AN", "RE", "ND", "AT", "ON", "NT", "HA", "EN", "ES", "ST", "OR", "TE", "OF", "ED", "IS", "IT", "MY"};
+        String[] commonTrigrams = {"THE", "AND", "ING", "ENT","HER", "FOR", "THA", "NTH", "INT", "TER", "EST", "RES", "HIS", "ERE", "HES", "ALL", "BUT","WIT","IRL"};
+        String[] uncommonBigrams = {"QZ","XJ", "ZQ", "JQ", "VX" ,"ZZ", "XZ", "QJ", "QX", "ZX", "KQ", "WZ", "VQ", "QW","XV", "KX","JZ","VZ","WX","QY","XY","JY","QK"};
+        String[] uncommonBiggrams = {"Z", "X", "Q","J"};
         double score = 0;
         for (String bigram : commonBigrams) {
             score += countOccurrences(text, bigram);
         }
+        for (String bigram : uncommonBiggrams) {
+            score -= countOccurrences(text, bigram);
+        }
         for (String trigram : commonTrigrams) {
-            score += countOccurrences(text, trigram)*2;
+            score += countOccurrences(text, trigram) * 2;
         }
-        for (String trigram : commonlotrams) {
-            score += countOccurrences(text, trigram)*10;
-        }
-        for (String trigram : uncommonBiggrams) {
-            score -= countOccurrences(text, trigram)*10;
+        for (String bigram : uncommonBigrams) {
+            score -= countOccurrences(text, bigram) * 10;
         }
         return score;
     }
